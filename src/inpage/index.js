@@ -55,7 +55,7 @@ function setupProviderStreams() {
   appMux.setMaxListeners(25);
 
   pump(pageMux, pageStream, pageMux, (err) =>
-    logStreamDisconnectWarning('MetaMask Inpage Multiplex', err),
+    logStreamDisconnectWarning('MetaMask Inpage Multiplex', err)
   );
   pump(appMux, appStream, appMux, (err) => {
     logStreamDisconnectWarning('MetaMask Background Multiplex', err);
@@ -82,8 +82,8 @@ function forwardTrafficBetweenMuxes(channelName, muxA, muxB) {
   pump(channelA, channelB, channelA, (err) =>
     logStreamDisconnectWarning(
       `MetaMask muxed traffic for channel "${channelName}" failed.`,
-      err,
-    ),
+      err
+    )
   );
 }
 
@@ -120,6 +120,6 @@ function notifyProviderOfStreamFailure() {
         },
       },
     },
-    window.location.origin,
+    window.location.origin
   );
 }

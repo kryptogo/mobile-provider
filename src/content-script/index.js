@@ -91,11 +91,11 @@ function suffixCheck() {
  * @returns {boolean} {@code true} if the documentElement is an html node or if none exists
  */
 function documentElementCheck() {
-  const documentElement = document.documentElement.nodeName;
-  if (documentElement) {
-    return documentElement.toLowerCase() === 'html';
+  if (document.documentElement) {
+    const e = document.documentElement.nodeName;
+    return !e || e.toLowerCase() === 'html';
   }
-  return true;
+  return false;
 }
 
 /**
@@ -122,7 +122,7 @@ function blockedDomainCheck() {
     const blockedDomain = blockedDomains[i].replace('.', '\\.');
     currentRegex = new RegExp(
       `(?:https?:\\/\\/)(?:(?!${blockedDomain}).)*$`,
-      'u',
+      'u'
     );
     if (!currentRegex.test(currentUrl)) {
       return true;
@@ -142,7 +142,7 @@ async function domIsReady() {
   }
   // wait for load
   await new Promise((resolve) => {
-    window.addEventListener('DOMContentLoaded', resolve, { once: true })
+    window.addEventListener('DOMContentLoaded', resolve, { once: true });
     window._metamaskSetupProvider();
   });
 }
