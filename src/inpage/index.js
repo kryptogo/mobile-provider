@@ -23,8 +23,27 @@ initializeProvider({
 // Set content script post-setup function
 Object.defineProperty(window, '_metamaskSetupProvider', {
   value: () => {
-    setupProviderStreams();
-    delete window._metamaskSetupProvider;
+    window.addEventListener('flutterInAppWebViewPlatformReady', function () {
+      console.log('[Browser Console] flutterInAppWebViewPlatformReady');
+      if (!window.flutter_inappwebview.callHandler) {
+        console.log(
+          '[Browser Console] flutter_inappwebview.callHandler is not defined'
+        );
+        window.flutter_inappwebview.callHandler = function (...arg) {
+          const _callHandlerID = setTimeout(function () {});
+          window.flutter_inappwebview._callHandler(
+            arg[0],
+            _callHandlerID,
+            JSON.stringify(Array.prototype.slice.call(arg, 1))
+          );
+          return new Promise(function (resolve) {
+            window.flutter_inappwebview[_callHandlerID] = resolve;
+          });
+        };
+      }
+      setupProviderStreams();
+      delete window._metamaskSetupProvider;
+    });
   },
   configurable: true,
   enumerable: false,
@@ -55,7 +74,7 @@ function setupProviderStreams() {
   appMux.setMaxListeners(25);
 
   pump(pageMux, pageStream, pageMux, (err) =>
-    logStreamDisconnectWarning('MetaMask Inpage Multiplex', err),
+    logStreamDisconnectWarning('MetaMask Inpage Multiplex', err)
   );
   pump(appMux, appStream, appMux, (err) => {
     logStreamDisconnectWarning('MetaMask Background Multiplex', err);
@@ -82,8 +101,8 @@ function forwardTrafficBetweenMuxes(channelName, muxA, muxB) {
   pump(channelA, channelB, channelA, (err) =>
     logStreamDisconnectWarning(
       `MetaMask muxed traffic for channel "${channelName}" failed.`,
-      err,
-    ),
+      err
+    )
   );
 }
 
@@ -120,6 +139,6 @@ function notifyProviderOfStreamFailure() {
         },
       },
     },
-    window.location.origin,
+    window.location.origin
   );
 }
