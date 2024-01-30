@@ -88,10 +88,24 @@ MobilePortStream.prototype._read = noop;
  */
 MobilePortStream.prototype._write = function (msg, _encoding, cb) {
   try {
+    if (!window.flutter_inappwebview.callHandler) {
+      window.flutter_inappwebview.callHandler = function () {
+        const _callHandlerID = setTimeout(function () {});
+        window.flutter_inappwebview._callHandler(
+          arguments[0],
+          _callHandlerID,
+          JSON.stringify(Array.prototype.slice.call(arguments, 1))
+        );
+        return new Promise(function (resolve, reject) {
+          window.flutter_inappwebview[_callHandlerID] = resolve;
+        });
+      };
+    }
+
     if (Buffer.isBuffer(msg)) {
       const data = msg.toJSON();
       data._isBuffer = true;
-      console.log(`[Browser Console] Buffer.isBuffer(msg) ${data}`);
+
       window.flutter_inappwebview.callHandler(
         'handleMessage',
         JSON.stringify({ ...data, origin: window.location.href })
@@ -100,7 +114,6 @@ MobilePortStream.prototype._write = function (msg, _encoding, cb) {
       if (msg.data) {
         msg.data.toNative = true;
       }
-      console.log(`[Browser Console] Buffer.isBuffer(msg) ${msg}`);
 
       window.flutter_inappwebview.callHandler(
         'handleMessage',

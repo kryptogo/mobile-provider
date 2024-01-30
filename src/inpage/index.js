@@ -3,55 +3,47 @@ const ObjectMultiplex = require('@metamask/object-multiplex');
 const pump = require('pump');
 const MobilePortStream = require('./MobilePortStream');
 const ReactNativePostMessageStream = require('./ReactNativePostMessageStream');
-
 const INPAGE = 'metamask-inpage';
 const CONTENT_SCRIPT = 'metamask-contentscript';
 const PROVIDER = 'metamask-provider';
-
 // Setup stream for content script communication
 const metamaskStream = new ReactNativePostMessageStream({
   name: INPAGE,
   target: CONTENT_SCRIPT,
 });
-
 // Initialize provider object (window.ethereum)
 initializeProvider({
   connectionStream: metamaskStream,
   shouldSendMetadata: false,
 });
-
 // Set content script post-setup function
 Object.defineProperty(window, '_metamaskSetupProvider', {
   value: () => {
-    window.addEventListener('flutterInAppWebViewPlatformReady', function () {
-      console.log('[Browser Console] flutterInAppWebViewPlatformReady');
-      if (!window.flutter_inappwebview.callHandler) {
-        console.log(
-          '[Browser Console] flutter_inappwebview.callHandler is not defined'
-        );
-        window.flutter_inappwebview.callHandler = function (...arg) {
-          const _callHandlerID = setTimeout(function () {});
-          window.flutter_inappwebview._callHandler(
-            arg[0],
-            _callHandlerID,
-            JSON.stringify(Array.prototype.slice.call(arg, 1))
-          );
-          return new Promise(function (resolve) {
-            window.flutter_inappwebview[_callHandlerID] = resolve;
-          });
-        };
-      }
-      setupProviderStreams();
-      delete window._metamaskSetupProvider;
-    });
+    setupProviderStreams();
+    delete window._metamaskSetupProvider;
   },
   configurable: true,
   enumerable: false,
+
+    
+          
+            
+    
+
+          
+          Expand Down
+          
+            
+    
+
+          
+          Expand Up
+    
+    @@ -55,7 +74,7 @@ function setupProviderStreams() {
+  
   writable: false,
 });
-
 // Functions
-
 /**
  * Setup function called from content script after the DOM is ready.
  */
@@ -61,11 +53,9 @@ function setupProviderStreams() {
     name: CONTENT_SCRIPT,
     target: INPAGE,
   });
-
   const appStream = new MobilePortStream({
     name: CONTENT_SCRIPT,
   });
-
   // create and connect channel muxes
   // so we can handle the channels individually
   const pageMux = new ObjectMultiplex();
@@ -74,20 +64,28 @@ function setupProviderStreams() {
   appMux.setMaxListeners(25);
 
   pump(pageMux, pageStream, pageMux, (err) =>
-    logStreamDisconnectWarning('MetaMask Inpage Multiplex', err)
+    logStreamDisconnectWarning('MetaMask Inpage Multiplex', err),
   );
   pump(appMux, appStream, appMux, (err) => {
     logStreamDisconnectWarning('MetaMask Background Multiplex', err);
+
+    
+        
+          
+    
+
+        
+        Expand All
+    
+    @@ -82,8 +101,8 @@ function forwardTrafficBetweenMuxes(channelName, muxA, muxB) {
+  
     notifyProviderOfStreamFailure();
   });
-
   // forward communication across inpage-background for these channels only
   forwardTrafficBetweenMuxes(PROVIDER, pageMux, appMux);
-
   // add web3 shim
   shimWeb3(window.ethereum);
 }
-
 /**
  * Set up two-way communication between muxes for a single, named channel.
  *
@@ -101,11 +99,28 @@ function forwardTrafficBetweenMuxes(channelName, muxA, muxB) {
   pump(channelA, channelB, channelA, (err) =>
     logStreamDisconnectWarning(
       `MetaMask muxed traffic for channel "${channelName}" failed.`,
-      err
-    )
+      err,
+    ),
   );
 }
 
+
+    
+          
+            
+    
+
+          
+          Expand Down
+          
+            
+    
+
+          
+          Expand Up
+    
+    @@ -120,6 +139,6 @@ function notifyProviderOfStreamFailure() {
+  
 /**
  * Error handler for page to extension stream disconnections
  *
@@ -120,7 +135,6 @@ function logStreamDisconnectWarning(remoteLabel, err) {
   console.warn(warningMsg);
   console.error(err);
 }
-
 /**
  * This function must ONLY be called in pump destruction/close callbacks.
  * Notifies the inpage context that streams have failed, via window.postMessage.
@@ -139,6 +153,6 @@ function notifyProviderOfStreamFailure() {
         },
       },
     },
-    window.location.origin
+    window.location.origin,
   );
 }
